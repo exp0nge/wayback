@@ -1,3 +1,6 @@
+aiohttp==3.6.2
+async-timeout==3.0.1
+attrs==19.3.0
 beautifulsoup4==4.9.1
 certifi==2020.6.20
 chardet==3.0.4
@@ -9,6 +12,7 @@ idna==2.10
 itsdangerous==0.24
 Jinja2==2.10
 MarkupSafe==1.0
+multidict==4.7.6
 requests==2.24.0
 responses==0.10.16
 six==1.15.0
@@ -16,3 +20,4 @@ soupsieve==2.0.1
 urllib3==1.25.10
 user-agent==0.1.9
 Werkzeug==0.14.1
+yarl==1.5.1
