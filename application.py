@@ -6,9 +6,10 @@ from bs4 import BeautifulSoup
 from urllib.parse import urljoin
 import datetime
 import base64
+from flask_cors import CORS
 
 app = Flask(__name__)
-
+CORS(app)
 
 dictConfig({
     'version': 1,
