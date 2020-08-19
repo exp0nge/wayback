@@ -1,13 +1,12 @@
 import React, { FC } from 'react';
 import './App.css';
-import { Layout, Menu, Breadcrumb, PageHeader, Input, Form, Spin, Alert } from 'antd';
-import { Store } from 'antd/lib/form/interface';
-import SearchForm from './SearchForm';
+import { Layout, PageHeader, Input, Form, Spin, Alert } from 'antd';
+import Site from './Site';
 
-const { Header, Content, Footer } = Layout;
+
+const { Content, Footer } = Layout;
 
 const App: FC = () => {
-
   return (<div className="App">
     <Layout className="layout">
       <Content style={{ padding: '0 50px' }}>
@@ -15,11 +14,11 @@ const App: FC = () => {
           className="site-page-header"
           title="wayback"
         />
-        <div className="site-layout-content">
-          <SearchForm />
+        <div className="site-layout-content" style={{ height: "calc(100vh - 55px)" }}>
+          <Site />
         </div>
       </Content>
-      {/* <Footer style={{ textAlign: 'center' }}>@exp0nge</Footer> */}
+      <Footer style={{ textAlign: 'center', position: "sticky", bottom: "0" }}><a href="https://github.com/exp0nge">@exp0nge</a></Footer>
     </Layout>
   </div>);
 };
