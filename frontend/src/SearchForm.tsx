@@ -4,20 +4,45 @@ import { Store } from 'antd/lib/form/interface';
 
 const { Header, Content, Footer } = Layout;
 
-class SearchForm extends React.Component {
+type Props = {
+    updateRecords: Function
+};
+type State = {};
+
+
+class SearchForm extends React.Component<Props, State> {
     state = {
         loading: false
     };
 
+    fetchHistory = (url: string, initial: boolean) => {
+        const { updateRecords } = this.props;
+
+        fetch(`https://viacors.azurewebsites.net/history?r=${url}`)
+            .then(res => res.json())
+            .then(
+                (result) => {
+                    if (!initial) {
+                        this.setState({ loading: false });
+                    }
+                    updateRecords(result);
+                },
+                (error) => {
+                    console.log('error', error);
+                }
+            );
+    }
+
     onFinish = (values: Store) => {
         this.setState({ loading: true });
         const url = values.url;
+        this.fetchHistory(url, true);
+
         fetch(`https://viacors.azurewebsites.net/?r=${url}`)
             .then(res => res.json())
             .then(
                 (result) => {
-                    this.setState({ loading: false });
-                    console.log(result['sky_html_link']);
+                    this.fetchHistory(url, false);
                 },
                 (error) => {
                     this.setState({ loading: false });
