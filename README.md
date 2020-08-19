@@ -3,7 +3,7 @@
 
 a basic impl of wayback with [Skynet](https://siasky.net/) and [HNS](https://www.namebase.io/)
 
-Demo: [https://siasky.net/AADQBmMcj0cXm75X-XHbYPGEIhNYoZG3bFmK5GhF9p4v6w](https://siasky.net/AADQBmMcj0cXm75X-XHbYPGEIhNYoZG3bFmK5GhF9p4v6w)
+Demo: [https://youtu.be/5HzxJKa-E0M](https://youtu.be/5HzxJKa-E0M)
 
 ## storage
 
