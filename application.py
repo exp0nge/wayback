@@ -233,7 +233,13 @@ def scrap():
 def history():
     url = request.args.get("r")
     if urlparse(url).netloc:
-        return jsonify(find_existing_records(url))
+        records = []
+        for k, v in find_existing_records(url).items():
+            records.append({
+                'epoch': k,
+                'skylink': v
+            })
+        return jsonify(records)
     else:
         return 'missing r', 400
 
