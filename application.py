@@ -157,7 +157,7 @@ def _update_nb(url, new_skylink_to_append):
         params={
             'filename': '{}_{}'.format(domain, epoch)
         })
-    update_req.raise_for_status
+    update_req.raise_for_status()
     skylink = update_req.json()['skylink']
     update_ns_req = requests.put(
         RECORD_KEEPER_TLD,
