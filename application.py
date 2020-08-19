@@ -11,6 +11,10 @@ import asyncio
 import aiohttp
 from aiohttp import ClientSession, ClientConnectorError
 from aiohttp.client_exceptions import ContentTypeError
+import os
+from requests.auth import HTTPBasicAuth
+from urllib.parse import urlparse
+import json
 
 app = Flask(__name__)
 CORS(app)
@@ -32,6 +36,15 @@ dictConfig({
 })
 
 SIASKY_BASE_URL = 'https://siasky.net/'
+SKYFILE_HOST = 'https://siasky.net/skynet/skyfile'
+NB_API_KEY = os.environ['NB_API_KEY'].strip()
+NB_SECRET_KEY = os.environ['NB_SECRET_KEY'].strip()
+RECORD_KEEPER_TLD = 'https://www.namebase.io/api/v0/dns/domains/knowest/nameserver'
+RECORD_KEEPER_BASIC_AUTH = HTTPBasicAuth(NB_API_KEY, NB_SECRET_KEY)
+NB_HEADERS = {
+    'Accept': 'application/json',
+    'Content-Type': 'application/json'
+}
 
 
 async def _fetch(u, file_type, session, sem):
@@ -41,7 +54,7 @@ async def _fetch(u, file_type, session, sem):
         async with sem:
             def req():
                 return session.request(method='POST',
-                                       url="https://siasky.net/skynet/skyfile",
+                                       url=SKYFILE_HOST,
                                        data=requests.get(u).content,
                                        headers={
                                            'Content-Type': file_type,
@@ -96,10 +109,67 @@ def replace_with_skylinks(html, sky_links):
     return html
 
 
+def _find_redirect_skylink(records, key):
+    for record in records:
+        if '_redirect.{}'.format(key) in record:
+            return record['value'].split('v=txtv0;type=host;to=')[-1]
+
+
+def find_existing_records(url):
+    existing_nameserver_settings = requests.get(
+        RECORD_KEEPER_TLD,
+        auth=HTTPBasicAuth(NB_API_KEY, NB_SECRET_KEY),
+        headers=NB_HEADERS
+    )
+    app.logger.debug(existing_nameserver_settings.json())
+    existing_nameserver_settings.raise_for_status()
+    records = existing_nameserver_settings.json()['records']
+    domain = urlparse(url).netloc
+    existing_record = _find_redirect_skylink(domain)
+    if existing_record:
+        records_req = requests.get(_find_redirect_skylink(domain))
+        records_req.raise_for_status()
+        records = records_req.json()
+    else:
+        records = []
+    return records
+
+
+def _update_nb(url, new_skylink_to_append):
+    domain = urlparse(url).netloc
+    records = find_existing_records(url)
+    epoch = datetime.datetime.now().timestamp()
+    records[epoch] = new_skylink_to_append
+    update_req = requests.post(
+        url=SKYFILE_HOST,
+        data=json.dumps(records),
+        headers={
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        },
+        params={
+            'filename': '{}_{}'.format(domain, epoch)
+        })
+    update_req.raise_for_status
+    update_ns_req = requests.put(
+        RECORD_KEEPER_TLD,
+        auth=HTTPBasicAuth(NB_API_KEY, NB_SECRET_KEY),
+        data=[
+            {
+                "type": 'CNAME',
+                "host": domain,
+                "value": update_req.json()['skylink'],
+                "ttl": 0,
+            }
+        ]
+    )
+    update_ns_req.raise_for_status()
+
+
 @app.route("/")
 def cors():
     url = request.args.get("r")
-    if url:
+    if urlparse(url).netloc:
         headers = {
             'User-Agent': generate_user_agent()
         }
@@ -122,6 +192,7 @@ def cors():
                     'filename': '{}.{}'.format(base64.b64encode(url.encode()), datetime.datetime.now().timestamp())
                 })
             sky_html_response.raise_for_status()
+            new_skylink = sky_html_response.json()['skylink']
 
             extract = {
                 'content': html,
@@ -132,13 +203,22 @@ def cors():
                 'js': list(js),
                 'js_sky': list(js_sky),
                 'sky_html': sky_html,
-                'sky_html_link': sky_html_response.json()['skylink']
+                'sky_html_link': new_skylink
             }
-
+            _update_nb(url, new_skylink)
             return jsonify(extract)
         except Exception as e:
             app.logger.error("error on url: {}, error: {}".format(url, e))
             return 'unprocessable', 400
+    else:
+        return 'missing r', 400
+
+
+@app.route('/history')
+def history():
+    url = request.args.get("r")
+    if urlparse(url).netloc:
+        return jsonify(find_existing_records(url))
     else:
         return 'missing r', 400
 
