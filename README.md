@@ -1,7 +1,7 @@
 # wayback
 
 
-a basic impl of wayback with [Skynet](https://siasky.net/) and [HNS](https://www.namebase.io/)
+a basic impl of the wayback machine with [Skynet](https://siasky.net/) and [HNS](https://www.namebase.io/)
 
 Demo: [https://youtu.be/5HzxJKa-E0M](https://youtu.be/5HzxJKa-E0M)
 
